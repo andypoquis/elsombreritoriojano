@@ -6,6 +6,8 @@ import { PayPalButtons, PayPalScriptProvider } from "@paypal/react-paypal-js"
 import { useElements, useStripe } from "@stripe/react-stripe-js"
 import { useCart } from "medusa-react"
 import React, { useEffect, useState } from "react"
+import { useMercadopago } from "react-sdk-mercadopago";
+
 
 type PaymentButtonProps = {
   paymentSession?: PaymentSession | null
@@ -28,6 +30,10 @@ const PaymentButton: React.FC<PaymentButtonProps> = ({ paymentSession }) => {
       return (
         <StripePaymentButton session={paymentSession} notReady={notReady} />
       )
+    case "mercadopago":
+      return (
+        <MercadoPagoButton session={paymentSession}  />
+    )
     case "manual":
       return <ManualTestPaymentButton notReady={notReady} />
     case "paypal":
@@ -195,6 +201,29 @@ const PayPalPaymentButton = ({
     </PayPalScriptProvider>
   )
 }
+
+const MERCADOPAGO_PUBLIC_KEY = "TEST-7958820d-3049-4d28-9cd5-ca97ea99c6d3" || "";
+
+const MercadoPagoButton = ({ session }: { session: PaymentSession }) => {
+  const mercadoPago = useMercadopago.v2(MERCADOPAGO_PUBLIC_KEY, {
+    locale: "es-PE",
+  });
+
+  const checkout = mercadoPago?.checkout({
+    preference: {
+      id: session.data.preferenceId, //preference ID
+    },
+  });
+
+  return (
+    <Button
+      size="base"
+      onClick={() => checkout.open()}
+    >
+      Pagar
+    </Button>
+  );
+};
 
 const ManualTestPaymentButton = ({ notReady }: { notReady: boolean }) => {
   const [submitting, setSubmitting] = useState(false)
